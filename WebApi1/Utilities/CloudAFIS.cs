@@ -2,16 +2,18 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Media.Imaging;
-using Newtonsoft.Json;
-using SourceAFIS.Simple; // import namespace SourceAFIS.Simple
+
 using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.Serialization;
 using WebApi1.Models;
+using SourceAFIS.Simple; // import namespace SourceAFIS.Simple
+using SourceAFIS.Extraction;
+using SourceAFIS.Templates;
+using SourceAFIS.Matching;
+using SourceAFIS.Meta;
+using SourceAFIS.General;
 
 namespace WebApi1.Utilities
 {
@@ -57,6 +59,7 @@ namespace WebApi1.Utilities
             // Add fingerprint to the person
             //  MyPerson person = new MyPerson();
             person.Fingerprints.Add(fp);
+            person.id = "1212";
             Afis.Extract(person);
             //string s = Converters.ObjectSerializer(person);
             return person;
@@ -74,8 +77,12 @@ namespace WebApi1.Utilities
 
         public static int CheckPerson(MyPerson person)
         {
-            DC action = new DC();
             Afis = new AfisEngine();
+
+
+
+            DC action = new DC();
+           
             List<MyPerson> persons = new List<MyPerson>();
             List<User> user = action.GetPersons();
             if (user.Count > 0)
@@ -88,7 +95,7 @@ namespace WebApi1.Utilities
 
 
                     p.id = u.id;
-                    Trace.WriteLine(u.template);
+                   // Trace.WriteLine(u.template);
                     persons.Add(p);
                 }
             }
@@ -106,16 +113,11 @@ namespace WebApi1.Utilities
                 //Trace.WriteLine("Matches registered person {0}",  match.id);
                 // Compute similarity score
                 float score = Afis.Verify(person, match);
-                Debug.WriteLine("Similarity score between person and match ," + score + " ID: " + match.id);
+                //Debug.WriteLine("Similarity score between person and match ," + score + " ID: " + match.id);
                 return Convert.ToInt32(match.id);
             }
         }
-
-        public static void Main()
-        {
-
-
-        }
+        
 
     }
 }

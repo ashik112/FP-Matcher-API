@@ -11,7 +11,7 @@ namespace WebApi1
 {
     public class DC
     {
-        public bool CreateUser(byte[] imageProfile, string name, string gender, string dob, byte[] finger, MyPerson person)
+        public bool CreateUser(string imageProfile, string name, string gender, string dob, string finger, MyPerson person)
         {
 
             //object yourMysteryObject = person;
@@ -51,12 +51,12 @@ namespace WebApi1
                 MySqlCommand cmd = new MySqlCommand();
 
                 cmd.Connection = DA.connection;
-                cmd.CommandText = "INSERT INTO user(pic,name,gender,dob,finger,template) VALUES(?pic, ?name, ?gender, ?dob, ?finger, ?template)";
-                cmd.Parameters.Add("?pic", MySqlDbType.Blob).Value = imageProfile;
+                cmd.CommandText = @"INSERT INTO user(pic,name,gender,dob,finger,template) VALUES(?pic, ?name, ?gender, ?dob, ?finger, ?template)";
+                cmd.Parameters.Add("?pic", MySqlDbType.Text).Value = @imageProfile;
                 cmd.Parameters.Add("?name", MySqlDbType.VarChar).Value = name;
                 cmd.Parameters.Add("?gender", MySqlDbType.VarChar).Value = gender;
                 cmd.Parameters.Add("?dob", MySqlDbType.VarChar).Value = dob;
-                cmd.Parameters.Add("?finger", MySqlDbType.Blob).Value = finger;
+                cmd.Parameters.Add("?finger", MySqlDbType.Text).Value = @finger;
                 cmd.Parameters.Add("?template", MySqlDbType.LongBlob).Value = steam;
                 //cmd.Parameters.Add("?template", MySqlDbType.VarBinary).Value= memStream.GetBuffer();
 
@@ -156,11 +156,11 @@ namespace WebApi1
                 {
                     User a = new User();
                     a.id = dataReader["id"] + "";
-                    a.profile = (byte[])dataReader["pic"];
+                    a.profile =dataReader["pic"]+"";
                     a.name = dataReader["name"] + "";
                     a.gender = dataReader["gender"] + "";
                     a.dob = dataReader["dob"] + "";
-                    a.finger = (byte[])dataReader["finger"];
+                    a.finger = dataReader["finger"]+"";
                     a.template = (byte[])dataReader["template"];
                     user.Add(a);
 
@@ -208,11 +208,11 @@ namespace WebApi1
                 {
 
                     user.id = dataReader["id"] + "";
-                    user.profile = (byte[])dataReader["pic"];
+                    user.profile = dataReader["pic"]+"";
                     user.name = dataReader["name"] + "";
                     user.gender = dataReader["gender"] + "";
                     user.dob = dataReader["dob"] + "";
-                    user.finger = (byte[])dataReader["finger"];
+                    user.finger = dataReader["finger"]+"";
                     //user.template = (byte[])dataReader["template"];
 
                 }
