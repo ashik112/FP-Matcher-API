@@ -59,7 +59,7 @@ namespace WebApi1.Utilities
             // Add fingerprint to the person
             //  MyPerson person = new MyPerson();
             person.Fingerprints.Add(fp);
-            person.id = "1212";
+            person.id = "";
             Afis.Extract(person);
             //string s = Converters.ObjectSerializer(person);
             return person;

@@ -13,6 +13,7 @@ using System.Web.Http.ModelBinding;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
+using Newtonsoft.Json;
 
 namespace WebApi1.Controllers
 {
@@ -20,17 +21,45 @@ namespace WebApi1.Controllers
     {
         static AfisEngine Afis;
         List<User> users = new List<User>();
+        User user = new User();
 
-        public IEnumerable<User> GetAllProducts()
+        /*
+         * Get All persons
+         * 
+         */
+        public IEnumerable<User> GetAllPersons()
         {
             DC dc = new DC();
             users=dc.GetPersons();
             return users;
         }
 
+        public string CheckAgent(string username, string password)
+        {
+           DC dc = new DC();
+           bool check = dc.CheckAgent(username,password);
+           // return username + " " + password;
+           if(check)
+            {
+                return "true";
+            }
+           else
+            {
+                return "false";
+            }
+        }
+
+        /*
+         * Get Person using Id number
+         */
         public IHttpActionResult GetPerson(int id)
         {
             DC dc = new DC();
+            User user = dc.GetPerson(id);
+            //users = dc.GetPersons();
+            //var user = users.FirstOrDefault((p) => Convert.ToInt32(p.id) == id);
+            return Ok(user);// JsonConvert.SerializeObject(user);
+            /*DC dc = new DC();
             users = dc.GetPersons();
             var user = users.FirstOrDefault((p) => Convert.ToInt32(p.id) == id);
             if (user == null)
@@ -38,10 +67,17 @@ namespace WebApi1.Controllers
                 return NotFound();
             }
             return Ok(user);
+            */
         }
 
+
+
+
+        /*
+         * Check If person exists in Data using Finger Print
+         */
         [HttpPost]
-        [Route("api/upload")]
+        [Route("api/check")]
         public async Task<IHttpActionResult> Upload()
         {
             if (!Request.Content.IsMimeMultipartContent())
@@ -59,79 +95,35 @@ namespace WebApi1.Controllers
             byte[] payload = await fileContents.ReadAsByteArrayAsync();
 
             BitmapImage fingerImage = Converters.ByteToBitmapImage(payload);
-            /*BitmapEncoder encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(fingerImage));
-
-            using (var fileStream = new System.IO.FileStream(HttpContext.Current.Server.MapPath("~") + "images\\temp\\", System.IO.FileMode.Create))
-            {
-                encoder.Save(fileStream);
-            }*/
-            //DC dc = new DC();
+           
             try
             {
                 MyPerson person = CloudAFIS.GetTemplateObject(fingerImage);
-                //int result = CloudAFIS.CheckPerson(person);
+              
                 DC db = new DC();
                 int result = CloudAFIS.CheckPerson(person);
                 if(result>0)
                 {
-                    users.Add(db.GetPerson(result));
-                    return this.Ok(users);
+                    //users.Add(db.GetPerson(result));
+                    
+                    return this.Ok(result);
                 }
                 else
                 {
                     return this.NotFound();
                 }
-               
-                /*if (result >= 0)
-                {
-                    return this.Ok("Person Found");
-                }
-                else
-                {
-                    return this.Ok("Person not found!!!!!");
-                }*/
+            
             }
             catch(Exception ex)
             {
                 return this.Ok(ex.Message);
             }
-           // return this.Ok(string.Join<User>(",", users.ToArray()));
-
-
-               /* return this.Ok(new
-
-            /*if (result >= 0)
-            {
-                DC db = new DC();
-                //User user = db.GetPerson(result);
-                users.Add(db.GetPerson(result));
-                return this.Ok(new
-                {
-                    Result = "file uploaded successfully",
-                });
-            }
-            else
-            {
-                return users;
-            }*/
-               /*  MessageBox.Show("Person Found!" + "\n" + "Name: " + u.name
-                     + "\n" + "Gender: " + u.gender + "\n");*/
-               //  }
-
-            // TODO: do something with the payload.
-            // note that this method is reading the uploaded file in memory
-            // which might not be optimal for large files. If you just want to
-            // save the file to disk or stream it to another system over HTTP
-            // you should work directly with the fileContents.ReadAsStreamAsync() stream
-
-            /* return this.Ok(new
-         {
-             Result = "file uploaded successfully",
-         });*/
+          
         }
 
-
+        /*
+         * Upload Profile Picture and return location
+         */
         [HttpPost]
         [Route("api/upload/uploadprofile")]
         public async Task<IHttpActionResult> UploadProfile()
@@ -165,6 +157,11 @@ namespace WebApi1.Controllers
             });*/
 
         }
+
+
+        /*
+         * Upload Finger Print Picture and return location
+         */
         [HttpPost]
         [Route("api/upload/uploadfinger")]
         public async Task<IHttpActionResult> UploadFinger()
@@ -196,35 +193,26 @@ namespace WebApi1.Controllers
 
         }
 
+        /*
+         * Upload User Name, Gender, D.O.B and Profile, FingerPrint Image
+         * using the location obtained from previous APIs.
+         * Then, save template in database using SourceAFIS
+         */
         [HttpPost]
-        [Route("api/upload/uploadtemplate")]
+        [Route("api/upload/uploadperson")]
         public async Task<IHttpActionResult> UploadTemplate(string name,string gender,string dob, string plocation, string flocation)
         {
-
-
-
-            if (!Request.Content.IsMimeMultipartContent())
+           if (!Request.Content.IsMimeMultipartContent())
             {
-                return this.StatusCode(HttpStatusCode.UnsupportedMediaType);
+                //return this.StatusCode(HttpStatusCode.UnsupportedMediaType);
             }
 
             var filesProvider = await Request.Content.ReadAsMultipartAsync();
             var fileContents = filesProvider.Contents.FirstOrDefault();
             if (fileContents == null)
             {
-                return this.BadRequest("Missing file");
+                //return this.BadRequest("Missing file");
             }
-
-            byte[] payload = await fileContents.ReadAsByteArrayAsync();
-
-            /*BitmapImage fingerImage = Converters.ByteToBitmapImage(payload);
-             BitmapEncoder encoder = new PngBitmapEncoder();
-             encoder.Frames.Add(BitmapFrame.Create(fingerImage));
-
-             using (var fileStream = new System.IO.FileStream(HttpContext.Current.Server.MapPath("~") + @"\images\finger\finger" + @timestamp + @".jpg", System.IO.FileMode.Create))
-             {
-                 encoder.Save(fileStream);
-             }*/
 
             flocation=flocation.Replace("{","");
             flocation = flocation.Replace("}", "");
@@ -235,80 +223,33 @@ namespace WebApi1.Controllers
             plocation = plocation.Replace("}", "");
             plocation = plocation.Replace(@"\", "");
             plocation = plocation.Replace('"', ' ').Trim();
+
+
             Bitmap ImageFinger = (Bitmap)Image.FromFile(HttpContext.Current.Server.MapPath("~") + "images\\finger\\"+flocation, true);
-            // MyPerson person = CloudAFIS.GetTemplateObject(Converters.ByteToBitmapImage(ImageFinger));
-            // MyPerson person = CloudAFIS.GetTemplateObject(Converters.Bitmap2BitmapImage(ImageFinger));
-            //  MyPerson person = CloudAFIS.GetTemplateObject(FingerImage);
-            // string person = cloud.GetTemplate(Converters.ByteToBitmapImage(ImageFinger));
+          
 
             Afis = new AfisEngine();
             Converters convert = new Converters();
-              MyFinger fp = new MyFinger();
-              fp.AsBitmap =ImageFinger;
-               MyPerson person = new MyPerson();
-               //person.Name = textName.Text;
-             // Add fingerprint to the person
-              person.Fingerprints.Add(fp);
-               Afis.Extract(person);
+            MyFinger fp = new MyFinger();
+            fp.AsBitmap =ImageFinger;
+            MyPerson person = new MyPerson();
+            person.Fingerprints.Add(fp);
+            Afis.Extract(person);
 
-             DC db = new DC();
-             bool status=db.CreateUser(plocation,name,gender,dob, flocation, person);
-               if(status)
-               {
-                   return this.Ok("Data Insert Successful!");
-                  // MessageBox.Show("Data Insert Successful!");
-               }
-               else
-               {
-                   return this.Ok(" Data Insert Failed!");
-               }
-
-
-
-            //return this.Ok(HttpContext.Current.Server.MapPath("~") + "images\\finger\\" + flocation);
-            /* return this.Ok(new
-             {
-                 Result = "File Uploaded Successfully:"+name+" "+gender+" "+dob+" "+payload.Length+"\n\n "+plocation+ "\n\n "+flocation,
-             });*/
+            DC db = new DC();
+            bool status=db.CreateUser(plocation,name,gender,dob, flocation, person);
+            if(status)
+            {
+                return this.Ok("Data Insert Successful!");
+                // MessageBox.Show("Data Insert Successful!");
+            }
+            else
+            {
+                return this.Ok(" Data Insert Failed!");
+            }
 
         }
 
-        //[HttpPost]
-        public IHttpActionResult PostPersonByFinger(string myarray)
-        {
-            //DC dc = new DC();
-            // users = dc.GetPersons();
-           // List<string> s = new List<string>();
-            //s.Add(myarray);
-            try
-            {
-                return Ok("DGDGDGDG");
-            }
-            catch(Exception ex)
-            {
-                return Ok(ex.Message);
-            }
-           
-            /*byte[] decBytes4 = HttpServerUtility.UrlTokenDecode(finger);
-            BitmapImage fingerImage = Converters.ByteToBitmapImage(decBytes4);
-            DC dc = new DC();
-            MyPerson person = CloudAFIS.GetTemplateObject(fingerImage);
-            int result = CloudAFIS.CheckPerson(person);
-            if (result >= 0)
-            {
-                DC db = new DC();
-                //User user = db.GetPerson(result);
-                users.Add(db.GetPerson(result));
-                return (users);
-                /*  MessageBox.Show("Person Found!" + "\n" + "Name: " + u.name
-                      + "\n" + "Gender: " + u.gender + "\n");*/
-            //  }
-
-            //return users;*/
-
-            // var user = users.FirstOrDefault((p) => Convert.ToInt32(p.id) == id);
-
-
-        }
+        
     }
 }

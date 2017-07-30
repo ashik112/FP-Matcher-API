@@ -21,7 +21,7 @@ namespace WebApi1.Utilities
 
 
 
-        public static Bitmap BitmapImage2Bitmap(BitmapImage bitmapImage)
+        /*public static Bitmap BitmapImage2Bitmap(BitmapImage bitmapImage)
         {
             // BitmapImage bitmapImage = new BitmapImage(new Uri("../Images/test.png", UriKind.Relative));
 
@@ -58,7 +58,7 @@ namespace WebApi1.Utilities
             }
 
             return retval;
-        }
+        }*/
 
         // Byte to ImageSource Converter
         public static ImageSource ByteToImage(byte[] imageData)

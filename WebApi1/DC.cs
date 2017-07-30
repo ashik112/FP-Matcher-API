@@ -208,12 +208,13 @@ namespace WebApi1
                 {
 
                     user.id = dataReader["id"] + "";
-                    user.profile = dataReader["pic"]+"";
+                    user.profile = HttpContext.Current.Server.MapPath("~") + @"images\profile\"+dataReader["pic"]+"";
                     user.name = dataReader["name"] + "";
                     user.gender = dataReader["gender"] + "";
                     user.dob = dataReader["dob"] + "";
-                    user.finger = dataReader["finger"]+"";
-                    //user.template = (byte[])dataReader["template"];
+                    user.finger = HttpContext.Current.Server.MapPath("~") + @"images\finger\"+dataReader["finger"]+"";
+                    // user.template = (byte[])dataReader["template"];
+                    //user.template = dataReader["template"];
 
                 }
 
@@ -230,8 +231,46 @@ namespace WebApi1
             }
         }
 
+        public bool CheckAgent(string username, string password)
+        {
+           // Agent user = new User();
+            DA db = new DA();
+            bool check = false;
 
-        
+            string query = "SELECT * FROM agent where username=" + username + " AND password="+password;
+
+            //Open connection
+            if (db.OpenConnection() == true)
+            {
+                MySqlCommand cmd = db.GetCommand(query);
+                MySqlDataReader dataReader = (MySqlDataReader)cmd.ExecuteReader();
+
+                //Read the data and store them in the list
+                // int count = 0;
+                /*  if(dataReader.FieldCount==1)
+                  {
+
+                  }*/
+                while (dataReader.Read())
+                {
+
+                    check = true;                   
+
+                }
+
+                //close Data Reader
+                dataReader.Close();
+
+                //close connection
+                db.CloseConnection();
+                return check;
+            }
+            else
+            {
+                return check;
+            }
+        }
+
     }
 
 }
